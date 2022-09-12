@@ -27,7 +27,6 @@
   "license": "ISC",
   "devDependencies": {
     "nodemon": "^2.0.12",
-    "@types/sequelize": "^4.28.14",
     "eslint": "^8.6.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-config-standard": "^16.0.3",
