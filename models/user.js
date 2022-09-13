@@ -24,10 +24,6 @@ module.exports = (sequelize, type) => {
         type: type.STRING,
         allowNull: false,
       },
-      access_token: {
-        type: type.TEXT,
-        defaultValue: null,
-      },
       reset_password_token: {
         type: type.TEXT,
         defaultValue: null,

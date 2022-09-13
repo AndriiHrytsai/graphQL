@@ -1,80 +1,58 @@
 const bcrypt = require('bcryptjs');
-const { connectToDatabaseUser } = require('../database/connection');
 const helper = require('../helpers/token.helper');
 const { SevenBoom } = require('graphql-apollo-errors');
 
-
 const resolvers = {
-    Query: {
-        async user(root, { id }) {
-            const { Users } = await connectToDatabaseUser();
-            const user = await Users.findOne({
-                where: { id: id },
-            });
-            return user;
-        },
-        async getAllUsers() {
-            const { Users } = await connectToDatabaseUser();
-            const users = await Users.findAll();
-            return users;
-        },
+  Query: {
+    async user(root, { id }, { models }) {
+      const user = await models.userModel.findOne({
+        where: { id: id },
+      });
+      return user;
     },
-    Mutation: {
-        async createUser(root, { first_name, last_name, email, password }) {
-            const { Users } = await connectToDatabaseUser();
-            const findUser = await Users.findOne({
-                where: { email: email },
-            });
+  },
+  Mutation: {
+    async createUser(
+      root,
+      { first_name, last_name, email, password },
+      { models },
+    ) {
+      const findUser = await models.userModel.findOne({
+        where: { email: email },
+      });
 
-            if (findUser) {
-                throw SevenBoom.badData('This email already exist');
-            }
+      if (findUser) {
+        throw SevenBoom.badData('This email already exist');
+      }
 
-            return Users.create({
-                first_name,
-                last_name,
-                email,
-                password: await bcrypt.hash(password, 10),
-            });
-        },
-
-        async login(root, { email, password }) {
-            const { Users } = await connectToDatabaseUser();
-
-            const findUser = await Users.findOne({
-                where: { email: email },
-            });
-            if (findUser === null) {
-                throw SevenBoom.conflict('This user in not defined');
-
-            }
-
-            const incorrectPassword = !bcrypt.compareSync(
-                password,
-                findUser.password,
-            );
-            if (incorrectPassword) {
-                throw SevenBoom.conflict('Passwords not concur');
-            }
-
-            const access_token = helper.user.accessToken(findUser.id, findUser.email);
-
-            let user = await Users.update(
-                {
-                    access_token: access_token,
-                },
-                {
-                    where: {
-                        email: email,
-                    },
-                    returning: true,
-                    raw: true,
-                    nest: true,
-                },
-            );
-            return user[1][0];
-        },
+      return models.userModel.create({
+        first_name,
+        last_name,
+        email,
+        password: await bcrypt.hash(password, 10),
+      });
     },
+
+    async login(root, { email, password }, { models }) {
+      const findUser = await models.userModel.findOne({
+        where: { email: email },
+      });
+      if (findUser === null) {
+        throw SevenBoom.conflict('This user in not defined');
+      }
+
+      const incorrectPassword = !bcrypt.compareSync(
+        password,
+        findUser.password,
+      );
+      if (incorrectPassword) {
+        throw SevenBoom.conflict('Passwords not concur');
+      }
+
+      const access_token = helper.user.accessToken(findUser.id, findUser.email);
+      return { access_token: access_token };
+    },
+  },
 };
 
 module.exports = resolvers;

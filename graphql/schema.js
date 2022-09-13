@@ -6,18 +6,15 @@ const typeDefs = gql`
     first_name: String!
     last_name: String!
     email: String!
-    password: String!
     access_token: String
-    reset_password_token: String
-   }
-  
+  }
+
   type Login {
     access_token: String
   }
 
   type Query {
     user(id: Int!): User
-    getAllUsers: [User]
   }
 
   type Mutation {
