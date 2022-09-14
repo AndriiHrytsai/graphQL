@@ -2,12 +2,14 @@ const express = require('express');
 require('dotenv').config();
 
 const { ApolloServer } = require('apollo-server');
-const typeDefs = require('./graphql/schema');
-const resolvers = require('./resolvers/resolvers');
-const models = require('./models');
+// const typeDefs = require('./graphql/schema');
+// const resolvers = require('./resolvers/resolvers');
+// const models = require('./models');
+const schema = require('./graphql/schema');
 
 const dbObj = require('./models');
 const db = dbObj.sequelize;
+
 db.sync({})
   .then(() => {
     console.log(
@@ -19,12 +21,7 @@ db.sync({})
     console.error('Unable to connect to the database:', err);
   });
 
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  context: { models },
-});
-
+const server = new ApolloServer(schema);
 server
   .listen()
   .then(({ url }) =>

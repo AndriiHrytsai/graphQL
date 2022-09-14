@@ -1,22 +1,22 @@
 const bcrypt = require('bcryptjs');
 const helper = require('../helpers/token.helper');
 const { SevenBoom } = require('graphql-apollo-errors');
+const models = require('../models');
 
 const resolvers = {
   Query: {
-    async user(root, { id }, { models }) {
+    async user(root, { id }) {
       const user = await models.userModel.findOne({
         where: { id: id },
       });
       return user;
     },
+    async currentUser(root, {}, context) {
+      return context.user.dataValues;
+    },
   },
   Mutation: {
-    async createUser(
-      root,
-      { first_name, last_name, email, password },
-      { models },
-    ) {
+    async createUser(root, { first_name, last_name, email, password }) {
       const findUser = await models.userModel.findOne({
         where: { email: email },
       });
@@ -33,7 +33,7 @@ const resolvers = {
       });
     },
 
-    async login(root, { email, password }, { models }) {
+    async login(root, { email, password }) {
       const findUser = await models.userModel.findOne({
         where: { email: email },
       });
@@ -50,7 +50,7 @@ const resolvers = {
       }
 
       const access_token = helper.user.accessToken(findUser.id, findUser.email);
-      return { access_token: access_token };
+      return { access_token };
     },
   },
 };

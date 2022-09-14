@@ -1,4 +1,7 @@
 const { gql } = require('apollo-server');
+const resolvers = require('../resolvers/resolvers');
+const models = require('../models');
+const JWT = require('jsonwebtoken');
 
 const typeDefs = gql`
   type User {
@@ -15,6 +18,7 @@ const typeDefs = gql`
 
   type Query {
     user(id: Int!): User
+    currentUser: User
   }
 
   type Mutation {
@@ -28,4 +32,40 @@ const typeDefs = gql`
   }
 `;
 
-module.exports = typeDefs;
+const schema = {
+  typeDefs,
+  resolvers,
+  context: async ({ req }) => {
+    const context = {
+      user: null,
+      req: req,
+    };
+    let bearerToken = req.headers.authorization;
+    if (bearerToken === undefined) {
+      return context;
+    }
+
+    let token = bearerToken.split(' ')[0];
+    if (typeof token === 'undefined') {
+      return context;
+    }
+
+    let decode;
+    try {
+      decode = JWT.verify(token, process.env.JWT_SECRET);
+    } catch (e) {
+      if (e.name === JWT.TokenExpiredError.name) {
+        return context;
+      } else {
+        return 'not valid';
+      }
+    }
+    context.user = await models.userModel.findOne({
+      where: { id: decode.sub },
+    });
+
+    return context;
+  },
+};
+
+module.exports = schema;
