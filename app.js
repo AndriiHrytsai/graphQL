@@ -2,7 +2,6 @@ const express = require('express');
 require('dotenv').config();
 const app = express();
 const { apiRouter } = require('./routes');
-// const { ApolloServer } = require('apollo-server');
 const { ApolloServer } = require('apollo-server-express');
 const schema = require('./graphql/schema');
 const session = require('express-session');
