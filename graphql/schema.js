@@ -17,6 +17,9 @@ const typeDefs = gql`
   type forgotPassword {
     message: String
   }
+  type updateUser {
+    message: String
+  }
 
   type Query {
     user(id: Int!): User
@@ -33,6 +36,12 @@ const typeDefs = gql`
     login(email: String!, password: String!): Login
     forgotPassword(email: String!): forgotPassword
     changePassword(token: String!, password: String!): forgotPassword
+    updateUser(
+      first_name: String
+      last_name: String
+      email: String
+      password: String
+    ): updateUser
   }
 `;
 

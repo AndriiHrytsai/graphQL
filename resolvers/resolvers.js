@@ -115,6 +115,18 @@ const resolvers = {
         message: 'Password successfully changed',
       };
     },
+
+    async updateUser(root, userData, context) {
+      if (userData.password !== undefined) {
+        userData.password = await bcrypt.hash(userData.password, 10);
+      }
+      await models.userModel.update(userData, {
+        where: { id: context.user.id },
+      });
+      return {
+        message: 'User information successfully updated',
+      };
+    },
   },
 };
 
