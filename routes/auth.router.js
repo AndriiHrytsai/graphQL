@@ -16,7 +16,7 @@ router.get('/google', (req, res, next) => {
 router.get(
   '/google/callback',
   passport.authenticate('google', { failureRedirect: '/login' }),
-  async (req, res, next) => {
+  async (req, res) => {
     const { email, given_name: first_name, family_name: last_name } = req.user;
     const getUser = await models.userModel.findOne({
       where: { email: email },

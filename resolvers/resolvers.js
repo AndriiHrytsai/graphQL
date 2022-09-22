@@ -115,6 +115,27 @@ const resolvers = {
         message: 'Password successfully changed',
       };
     },
+
+    async updateUser(root, userData, context) {
+      if (userData.password) {
+        userData.password = await bcrypt.hash(userData.password, 10);
+      }
+      if (userData.email) {
+        const user = await models.userModel.findOne({
+          where: { email: userData.email },
+        });
+        if (user) {
+          throw SevenBoom.conflict('This email already exist');
+        }
+        await mailHelper.sendMail(userData.email, 'Update email');
+      }
+      await models.userModel.update(userData, {
+        where: { id: context.user.id },
+      });
+      return {
+        message: 'User information successfully updated',
+      };
+    },
   },
 };
 
