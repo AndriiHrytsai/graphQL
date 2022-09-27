@@ -4,6 +4,8 @@ const models = require('../models');
 const JWT = require('jsonwebtoken');
 
 const typeDefs = gql`
+  scalar Upload
+
   type User {
     id: Int!
     first_name: String!
@@ -42,6 +44,7 @@ const typeDefs = gql`
       email: String
       password: String
     ): updateUser
+    connectWithUs(title: String!, description: String!, file: Upload): forgotPassword
   }
 `;
 

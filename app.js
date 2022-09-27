@@ -6,6 +6,7 @@ const { ApolloServer } = require('apollo-server-express');
 const schema = require('./graphql/schema');
 const session = require('express-session');
 const passport = require('passport');
+const { graphqlUploadExpress } = require("graphql-upload");
 
 const dbObj = require('./models');
 const db = dbObj.sequelize;
@@ -31,6 +32,10 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 app.use('/', apiRouter);
+app.use(graphqlUploadExpress({
+    maxFieldSize: process.env.MAXIMUM_UPLOAD_FILE_SIZE,
+    maxFiles: process.env.MAXIMUM_NUMBER_OF_UPLOADED_FILES,
+}));
 
 const server = new ApolloServer(schema);
 
