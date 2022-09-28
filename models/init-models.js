@@ -1,11 +1,10 @@
-const _UserModel = require('../models/user');
-const _SupportModel = require('../models/support');
+const { users } = require('../models/user');
+const { support } = require('../models/support');
 const { DataTypes } = require('sequelize');
 
 function initModels(sequelize) {
-    const userModel = _UserModel(sequelize, DataTypes);
-    const supportModel = _SupportModel(sequelize, DataTypes);
-    supportModel.belongsTo(userModel, { foreignKey: 'user_id' });
+    const userModel = users.init(sequelize, DataTypes);
+    const supportModel = support.init(sequelize, DataTypes);
     return { userModel, supportModel };
 }
 
