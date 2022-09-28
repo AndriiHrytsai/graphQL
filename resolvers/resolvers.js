@@ -138,17 +138,16 @@ const resolvers = {
         },
 
         async connectWithUs(root, { title, description, file }, context) {
-            const user = await models.userModel.findByPk(context.user.id);
-            if (!user) {
+            if (!context.user) {
                 throw SevenBoom.unauthorized('Access token not found');
             }
-            let url = null;
+            let pathToFile = null;
             if (file) {
-                url = await fileUpload(file);
+                pathToFile = await fileUpload(file, 'support');
             }
 
             await models.supportModel.create({
-                title, description, file: url, user_id: user.id
+                title, description, file: pathToFile, user_id: context.user.id
             });
             await mailHelper.sendMail(process.env.ADMIN_EMAIL, 'Support');
             return {
