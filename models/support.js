@@ -1,6 +1,6 @@
 const Sequelize = require('sequelize');
 
-class users extends Sequelize.Model {
+class support extends Sequelize.Model {
     static init(sequelize, DataTypes) {
         return super.init(
             {
@@ -9,26 +9,21 @@ class users extends Sequelize.Model {
                     primaryKey: true,
                     autoIncrement: true,
                 },
-                first_name: {
+                title: {
                     type: DataTypes.STRING,
                     allowNull: false,
                 },
-                last_name: {
+                description: {
                     type: DataTypes.STRING,
                     allowNull: false,
                 },
-                email: {
+                file: {
                     type: DataTypes.STRING,
-                    allowNull: false,
-                    unique: true,
-                },
-                password: {
-                    type: DataTypes.STRING,
-                    allowNull: false,
-                },
-                reset_password_token: {
-                    type: DataTypes.TEXT,
                     defaultValue: null,
+                },
+                user_id: {
+                    type: DataTypes.INTEGER,
+                    allowNull: false,
                 },
             },
             {
@@ -38,8 +33,12 @@ class users extends Sequelize.Model {
             },
         )
     };
+
+    static associate(models) {
+        this.belongsTo(models.userModel, { foreignKey: "user_id" });
+    }
 }
 
 module.exports = {
-    users
+    support
 }
