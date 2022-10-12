@@ -1,13 +1,14 @@
 const bcrypt = require('bcryptjs');
 const { mailHelper, tokenHelper, fileUpload } = require('../helpers');
 const { SevenBoom } = require('graphql-apollo-errors');
+const { withFilter } = require('graphql-subscriptions');
 const models = require('../models');
+const pubSub = require('../graphql/pubsub');
 
 const resolvers = {
     Query: {
         async user(root, { id }) {
-            const user = await models.userModel.findByPk(id);
-            return user;
+            return await models.userModel.findByPk(id);
         },
         async currentUser(root, {}, context) {
             return context.user;
@@ -153,6 +154,47 @@ const resolvers = {
             return {
                 message: 'User information successfully updated',
             };
+        },
+
+        async newMessage(root, chatData, context) {
+            const findUser = await models.userModel.findByPk(chatData.to_user);
+            if (!findUser) {
+                throw SevenBoom.conflict('This user in not defined');
+            }
+
+            await models.chatModel.create({
+                ...chatData,
+                from_user: context.user.id,
+            });
+            await pubSub.publish('NEW_MESSAGE', { newMessage: chatData })
+            return { message: "Message successfully sent" }
+        },
+
+        async readMessage(root, chatData) {
+            await pubSub.publish('READ_MESSAGE', { readMessage: chatData })
+            await models.chatModel.update(
+                {
+                    is_read: true,
+                },
+                {
+                    where: { id: chatData.message_id },
+                },
+            );
+            return { message: "Message is already has been read" }
+        },
+    },
+    Subscription: {
+        newMessage: {
+            subscribe: withFilter(() => pubSub.asyncIterator("NEW_MESSAGE"),
+                (payload, args) => {
+                    return payload.newMessage.chat_id === args.chat_id
+                })
+        },
+        readMessage: {
+            subscribe: withFilter(() => pubSub.asyncIterator("READ_MESSAGE"),
+                (payload, args) => {
+                    return payload.readMessage.chat_id === args.chat_id
+                })
         },
     },
 };

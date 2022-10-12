@@ -1,12 +1,16 @@
 const express = require('express');
+const { createServer } = require("http");
 require('dotenv').config();
 const app = express();
 const { apiRouter } = require('./routes');
 const { ApolloServer } = require('apollo-server-express');
-const schema = require('./graphql/schema');
+const { schema, context } = require('./graphql/schema');
 const session = require('express-session');
 const passport = require('passport');
 const { graphqlUploadExpress } = require("graphql-upload");
+const { useServer } = require("graphql-ws/lib/use/ws");
+const { WebSocketServer } = require("ws");
+
 
 const dbObj = require('./models');
 const db = dbObj.sequelize;
@@ -37,11 +41,24 @@ app.use(graphqlUploadExpress({
     maxFiles: process.env.MAXIMUM_NUMBER_OF_UPLOADED_FILES,
 }));
 
-const server = new ApolloServer(schema);
+const httpServer = createServer(app);
+const wsServer = new WebSocketServer({
+    server: httpServer,
+    path: "/graphql",
+});
+const serverCleanup = useServer({ schema }, wsServer);
+
+const server = new ApolloServer({ schema, context });
 
 server.start().then((res) => {
   server.applyMiddleware({ app });
-  app.listen({ port: process.env.PORT }, () =>
-    console.log(`Now browse to ${process.env.PORT}` + server.graphqlPath),
-  );
+});
+
+httpServer.listen({port : process.env.PORT}, () => {
+    console.log(
+        `🚀 Query endpoint ready at http://localhost:${process.env.PORT}${server.graphqlPath}`
+    );
+    console.log(
+        `🚀 Subscription endpoint ready at ws://localhost:${process.env.PORT}${server.graphqlPath}`
+    );
 });
