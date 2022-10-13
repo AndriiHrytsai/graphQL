@@ -9,20 +9,24 @@ class chat extends Sequelize.Model {
           primaryKey: true,
           autoIncrement: true,
         },
-        chat_id: {
-          type: DataTypes.INTEGER,
-          allowNull: false,
-        },
         message: {
           type: DataTypes.STRING,
         },
         from_user: {
           type: DataTypes.INTEGER,
           allowNull: false,
+          references: {
+            model: 'users',
+            key: 'id',
+          },
         },
         to_user: {
           type: DataTypes.INTEGER,
           allowNull: false,
+          references: {
+            model: 'users',
+            key: 'id',
+          },
         },
         is_read: {
           type: DataTypes.BOOLEAN,

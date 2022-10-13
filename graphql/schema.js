@@ -1,48 +1,26 @@
 const { gql } = require('apollo-server');
-const resolvers = require('../resolvers/resolvers');
 const models = require('../models');
 const JWT = require('jsonwebtoken');
 const { makeExecutableSchema } = require('@graphql-tools/schema');
+const _ = require('lodash');
+const { withFilter } = require('graphql-subscriptions');
+const pubSub = require('./pubsub');
+
+const User = require('./types/user');
+const Support = require('./types/support');
+const Chat = require('./types/chat');
 
 const typeDefs = gql`
+  ${User.typeDefs()}
+  ${Support.typeDefs()}
+  ${Chat.typeDefs()}
+
   scalar Upload
-
-  type User {
-    id: Int!
-    first_name: String!
-    last_name: String!
-    email: String!
-  }
-
-  type Chat {
-    chat_id: Int!
-    message: String!
-    from_user: Int!
-    to_user: Int!
-  }
-
-  type Login {
-    access_token: String
-  }
-
-  type Message {
-    message: String
-  }
-  type ChatMessage {
-    chat_id: Int!
-    message: String!
-    to_user: Int!
-  }
-
-  type readMessage {
-    chat_id: Int!
-    message_id: [Int]!
-  }
 
   type Query {
     user(id: Int!): User
     currentUser: User
-    chatHistory(chat_id: Int!): [Chat]
+    chatHistory(to_user: Int!): [Chat]
   }
 
   type Mutation {
@@ -62,19 +40,47 @@ const typeDefs = gql`
       password: String
     ): Message
     connectWithUs(title: String!, description: String!, file: Upload): Message
-    newMessage(chat_id: Int!, message: String!, to_user: Int!): Message
-    readMessage(chat_id: Int!, message_id: [Int!]!): Message
+    newMessage(message: String!, to_user: Int!): Message
+    readMessage(from_user: Int!): Message
   }
 
   type Subscription {
-    newMessage(chat_id: Int!): ChatMessage
-    readMessage(chat_id: Int!): readMessage
+    newMessage(to_user: Int!): ChatMessage
+    readMessage(from_user: Int!): Message
   }
 `;
 
+function combineResolvers() {
+  return _.merge(
+    {
+      Subscription: {
+        newMessage: {
+          subscribe: withFilter(
+            () => pubSub.asyncIterator('NEW_MESSAGE'),
+            (payload, args) => {
+              return payload.newMessage.to_user === args.to_user;
+            },
+          ),
+        },
+        readMessage: {
+          subscribe: withFilter(
+            () => pubSub.asyncIterator('READ_MESSAGE'),
+            (payload, args) => {
+              return payload.readMessage.from_user === args.from_user;
+            },
+          ),
+        },
+      },
+    },
+    User.resolver(),
+    Support.resolver(),
+    Chat.resolver(),
+  );
+}
+
 const schema = makeExecutableSchema({
   typeDefs,
-  resolvers,
+  resolvers: combineResolvers(),
 });
 
 const context = async ({ req }) => {
