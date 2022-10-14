@@ -30,10 +30,6 @@ module.exports = class Chat {
         type readMessage {
             message_id: [Int]!
         }
-        
-        type Message {
-            message: String
-        }
     `;
   }
 };

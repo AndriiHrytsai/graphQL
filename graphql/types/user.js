@@ -29,10 +29,6 @@ module.exports = class User {
     type Login {
         access_token: String
     }
-    
-    type Message {
-        message: String
-    }
     `;
   }
 };

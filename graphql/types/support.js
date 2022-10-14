@@ -10,27 +10,7 @@ module.exports = class Support {
   }
 
   static typeDefs() {
-    return `
-    input UserInput {
-        email: String!
-        password: String!
-        firstName: String
-        middleName: String
-        lastName: String
-        photo: Upload
-    }
-
-    type User {
-        id: Int!
-        first_name: String!
-        last_name: String!
-        email: String!
-    }
-    
-    type Login {
-        access_token: String
-    }
-    
+    return `    
     type Message {
         message: String
     }

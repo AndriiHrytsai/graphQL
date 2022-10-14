@@ -24,21 +24,11 @@ const typeDefs = gql`
   }
 
   type Mutation {
-    createUser(
-      first_name: String!
-      last_name: String!
-      email: String!
-      password: String!
-    ): User!
+    createUser(first_name: String!, last_name: String!, email: String!, password: String!): User!
     login(email: String!, password: String!): Login
     forgotPassword(email: String!): Message
     changePassword(token: String!, password: String!): Message
-    updateUser(
-      first_name: String
-      last_name: String
-      email: String
-      password: String
-    ): Message
+    updateUser(first_name: String, last_name: String, email: String, password: String): Message
     connectWithUs(title: String!, description: String!, file: Upload): Message
     newMessage(message: String!, to_user: Int!): Message
     readMessage(from_user: Int!): Message
