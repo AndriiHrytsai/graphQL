@@ -36,8 +36,8 @@ const chatResolver = {
       },
       {
         where: {
-          from_user: context.user.id,
-          to_user: chatData.from_user,
+          from_user: chatData.from_user,
+          to_user: context.user.id,
           is_read: false,
         },
       },
