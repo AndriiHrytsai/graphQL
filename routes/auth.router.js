@@ -62,7 +62,7 @@ router.get(
     req.candidate = {
       first_name: req.user?.username,
       last_name: req.user?.displayName,
-      email: req.body?.email || 'xazazxaz@gmail.com',
+      email: req.body?.email,
     };
     const access_token = await oAuthHelper(req.candidate);
     res.json(access_token);

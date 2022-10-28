@@ -3,6 +3,7 @@ const mailHelper = require('../helpers/mail.helper');
 const tokenHelper = require('../helpers/token.helper');
 const generator = require('generate-password');
 const bcrypt = require('bcryptjs');
+const { SevenBoom } = require('graphql-apollo-errors');
 
 const getUserAndGenerateAccessToken = async (candidate) => {
   const getUser = await models.userModel.findOne({
@@ -10,6 +11,9 @@ const getUserAndGenerateAccessToken = async (candidate) => {
   });
   if (getUser) {
     return tokenHelper.user.accessToken(getUser.id, getUser.email);
+  }
+  if (!candidate.email) {
+    throw SevenBoom.conflict('You have not specified your email');
   }
 
   const userPassword = generator.generate({ length: 8, numbers: true });
