@@ -1,9 +1,6 @@
 const router = require('express').Router();
 const passport = require('passport');
-const models = require('../models');
-const generator = require('generate-password');
-const bcrypt = require('bcryptjs');
-const { tokenHelper, mailHelper } = require('../helpers');
+const { oAuthHelper } = require('../helpers');
 const passportFacebook = require('../passportStrategy/facebook');
 const passportGoogle = require('../passportStrategy/google');
 const passportTwitter = require('../passportStrategy/twitter');
@@ -21,30 +18,12 @@ router.get(
   passport.authenticate('google', { failureRedirect: '/login' }),
   async (req, res) => {
     const { email, given_name: first_name, family_name: last_name } = req.user;
-    const getUser = await models.userModel.findOne({
-      where: { email: email },
-    });
-    if (getUser) {
-      const access_token = tokenHelper.user.accessToken(
-        getUser.id,
-        getUser.email,
-      );
-      res.json(access_token);
-      return access_token;
-    }
-    const userPassword = generator.generate({ length: 8, numbers: true });
-    await mailHelper.sendMail(email, 'Your generated password', {
-      userName: first_name,
-      password: userPassword,
-    });
-
-    const user = await models.userModel.create({
-      first_name,
-      last_name,
-      email,
-      password: await bcrypt.hash(userPassword, 10),
-    });
-    const access_token = tokenHelper.user.accessToken(user.id, user.email);
+    req.candidate = {
+      first_name: first_name,
+      last_name: last_name,
+      email: email,
+    };
+    const access_token = await oAuthHelper(req.candidate);
     res.json(access_token);
   },
 );
@@ -67,28 +46,7 @@ router.get(
       email: req.user?.emails?.[0]?.value,
     };
 
-    const getUser = await models.userModel.findOne({
-      where: { email: req.candidate.email },
-    });
-    if (getUser) {
-      const access_token = tokenHelper.user.accessToken(
-        getUser.id,
-        getUser.email,
-      );
-      res.json(access_token);
-      return access_token;
-    }
-    const userPassword = generator.generate({ length: 8, numbers: true });
-    await mailHelper.sendMail(req.candidate.email, 'Your generated password', {
-      userName: req.candidate.first_name,
-      password: userPassword,
-    });
-
-    const user = await models.userModel.create({
-      ...req.candidate,
-      password: await bcrypt.hash(userPassword, 10),
-    });
-    const access_token = tokenHelper.user.accessToken(user.id, user.email);
+    const access_token = await oAuthHelper(req.candidate);
     res.json(access_token);
   },
 );
@@ -96,9 +54,19 @@ router.get(
 router.get('/twitter', (req, res, next) => {
   passport.authenticate('twitter', { scope: ['user_profile'] })(req, res, next);
 });
+
 router.get(
   '/twitter/callback',
   passport.authenticate('twitter', { failureRedirect: '/login' }),
+  async (req, res) => {
+    req.candidate = {
+      first_name: req.user?.username,
+      last_name: req.user?.displayName,
+      email: req.body?.email || 'xazazxaz@gmail.com',
+    };
+    const access_token = await oAuthHelper(req.candidate);
+    res.json(access_token);
+  },
 );
 
 module.exports = router;
